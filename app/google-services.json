@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "404245232950",
+    "project_id": "cerraduraiot-sumativa",
+    "storage_bucket": "cerraduraiot-sumativa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:404245232950:android:f71d32159a58b326198797",
+        "android_client_info": {
+          "package_name": "com.example.cerradurainteligente"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_s8_A-Q15bWPA3AdeXHV8EeY6nB9CIV0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

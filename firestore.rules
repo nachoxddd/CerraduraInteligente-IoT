@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function conectado() {
+      return request.auth != null;
+    }
+
+    function rutaPerfil() {
+      return /databases/$(database)/documents/usuarios/$(request.auth.uid);
+    }
+
+    function cuentaActiva() {
+      return conectado()
+        && exists(rutaPerfil())
+        && get(rutaPerfil()).data.activo == true;
+    }
+
+    // El cliente no puede convertir su cuenta en administrador.
+    // El primer administrador se asigna desde la consola Firebase.
+    function esAdministrador() {
+      return cuentaActiva()
+        && get(rutaPerfil()).data.rol == 'administrador';
+    }
+
+    match /usuarios/{usuarioId} {
+      allow read: if conectado()
+        && (request.auth.uid == usuarioId || esAdministrador());
+
+      allow create: if conectado()
+        && request.auth.uid == usuarioId
+        && request.resource.data.keys().hasOnly([
+          'nombre', 'correo', 'rol', 'activo', 'creadoEn'
+        ])
+        && request.resource.data.keys().hasAll([
+          'nombre', 'correo', 'rol', 'activo', 'creadoEn'
+        ])
+        && request.resource.data.nombre is string
+        && request.resource.data.nombre.size() >= 3
+        && request.resource.data.nombre.size() <= 80
+        && request.resource.data.correo == request.auth.token.email
+        && request.resource.data.rol == 'usuario'
+        && request.resource.data.activo == true
+        && request.resource.data.creadoEn == request.time;
+
+      // Solo se pueden cambiar el nombre y el estado de cuentas normales.
+      allow update: if esAdministrador()
+        && resource.data.rol == 'usuario'
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['nombre', 'activo'])
+        && request.resource.data.nombre is string
+        && request.resource.data.nombre.size() >= 3
+        && request.resource.data.nombre.size() <= 80
+        && request.resource.data.activo is bool;
+
+      // En esta versión no eliminamos documentos ni cuentas de Auth.
+      allow delete: if false;
+    }
+
+    match /eventos/{eventoId} {
+      allow create: if cuentaActiva()
+        && request.resource.data.keys().hasOnly([
+          'usuarioId', 'usuarioCorreo', 'accion',
+          'fecha', 'dispositivoId', 'simulado'
+        ])
+        && request.resource.data.keys().hasAll([
+          'usuarioId', 'usuarioCorreo', 'accion',
+          'fecha', 'dispositivoId', 'simulado'
+        ])
+        && request.resource.data.usuarioId == request.auth.uid
+        && request.resource.data.usuarioCorreo == request.auth.token.email
+        && request.resource.data.accion in ['ABRIR', 'CERRAR']
+        && request.resource.data.fecha == request.time
+        && request.resource.data.dispositivoId is string
+        && request.resource.data.dispositivoId.size() <= 80
+        && request.resource.data.simulado == true;
+
+      // El administrador ve todos; el usuario solo sus propios eventos.
+      allow read: if esAdministrador()
+        || (cuentaActiva()
+          && resource.data.usuarioId == request.auth.uid);
+
+      // No se permite modificar o eliminar una operación ya registrada.
+      allow update, delete: if false;
+    }
+
+    // Cualquier otra colección queda bloqueada.
+    match /{documento=**} {
+      allow read, write: if false;
+    }
+  }
+}

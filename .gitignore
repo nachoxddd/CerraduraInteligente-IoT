@@ -1,0 +1,26 @@
+# Archivos generados o propios de cada computadora
+.gradle/
+.kotlin/
+.idea/
+**/build/
+local.properties
+*.iml
+.DS_Store
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# Bases de datos y datos de pruebas locales
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Otras bases de datos locales
+*.sqlite
+*.sqlite3
+
+# Claves y certificados privados
+*.jks
+*.keystore
+service-account*.json
