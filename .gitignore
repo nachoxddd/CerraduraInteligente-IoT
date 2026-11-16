@@ -24,3 +24,7 @@ local.properties
 *.jks
 *.keystore
 service-account*.json
+
+# Apuntes personales
+README.md
+PRUEBAS_Y_PRESENTACION.md
